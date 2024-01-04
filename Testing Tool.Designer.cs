@@ -142,7 +142,7 @@
             Scenario_textbox.Name = "Scenario_textbox";
             Scenario_textbox.Size = new Size(489, 42);
             Scenario_textbox.TabIndex = 16;
-            Scenario_textbox.TextChanged += textBox2_TextChanged;
+            Scenario_textbox.TextChanged += SearchScenario_TextChanged;
             // 
             // ScenarioByCheckBox
             // 

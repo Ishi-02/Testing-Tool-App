@@ -9,25 +9,32 @@ namespace WinFormsApp1
 {
     public partial class Form1 : Form
     {
-        static string filename_output = string.Format(@"C:\LogTestFile\Testing {0:dd-MM-yyyy}.log", DateTime.Now);
+        //the location of the folder and the file where the test output will be stored
+        static string folder_output = string.Format(@"C:\LogTestFile", DateTime.Now);
+        static string file_output = string.Format("Testing {0:dd-MM-yyyy}.log", DateTime.Now);
+        static string filePath = Path.Combine(folder_output, file_output);
 
+        //display of the tags
         static bool areaTag = false;
         static bool scenarioTag = false;
 
+        //variables to store folder of the test to be run
         static string folderpath;
         static string featureNameSelected;
 
+        //to store the tag 
         Dictionary<string, List<string>> TagDictionary;
 
+        //Lists to store the selected values of the tags or scenarios
         List<CheckBox> TagCheckboxesList;
         static List<String> SelectedScenario;
 
-
+        //display the scenarios in a checkbox list
         private Panel dropdownPanel;
         private CheckedListBox checkedListBox;
         private System.Windows.Forms.Button buttonShowCheckedList;
 
-        private int itemsToShow = 10; // Number of items to display at a time
+        private int itemsToShow = 10; // Number of items to display at a time in the dropdown
         private int currentIndex = 0;
         public Form1()
         {
@@ -51,21 +58,7 @@ namespace WinFormsApp1
             this.SizeGripStyle = SizeGripStyle.Auto;
         }
 
-        private string GettingPath()
-        {
-            string configpath = @"C:\ConfigFiles\TestInfo.config";
-            ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap();
-            configFileMap.ExeConfigFilename = configpath;
-
-            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
-
-            string filepath = config.AppSettings.Settings["filename"].Value;
-
-            filepath_textbox.Text = filepath;
-            filepath_textbox.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
-            return filepath_textbox.Text;
-        }
-        // Press Search Project
+        // Search Project typed in search bar
         private void SearchProject_Click(object sender, EventArgs e)
         {
 
@@ -83,6 +76,26 @@ namespace WinFormsApp1
             Scenario_textbox.Clear();
             ScenarioFoundTextbox.Clear();
         }
+
+        //Getting the path to search its features files
+        private string GettingPath()
+        {
+            // Code to fetch the file path in a config file
+                //string configpath = @"C:\ConfigFiles\TestInfo.config";
+                //ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap();
+                //configFileMap.ExeConfigFilename = configpath;
+
+                //Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+
+                //string filepath = config.AppSettings.Settings["filename"].Value;
+
+            filepath_textbox.Text = @"C:\NunitTest";
+            filepath_textbox.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            return filepath_textbox.Text;
+        }
+
+      
+       //Populate the feature files dropdown with its file name 
         private void GettingFeaturesAvailable(string filepath)
         {
             filepath = filepath_textbox.Text;
@@ -111,7 +124,7 @@ namespace WinFormsApp1
             }
             else
             {
-
+                //hide other panels 
                 MethodPanel.Visible = false;
                 AreaTag_panel.Visible = false;
                 ScenarioBySearch.Visible = false;
@@ -122,6 +135,8 @@ namespace WinFormsApp1
                 MessageBox.Show("Path/Project does not exist");
             }
         }
+
+        //for each feature file selected -> read and display the tags and their respective scenarios
         private void FeatureFilesDropdown_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (FeatureFilesDropdown.SelectedIndex != null)
@@ -145,12 +160,14 @@ namespace WinFormsApp1
 
                     try
                     {
+                        //Dictionary used to store the tests' tags and their respective scenarios
                         TagDictionary = new Dictionary<string, List<string>>();
 
                         DisplayScenario.Text = String.Empty;
                         DisplayScenario.Text = $"Tags and their scenarios\r\n";
                         DisplayScenario.Text += "\r\n";
 
+                        //for the selected feeature file, read all the tags and only input those tags that contain either P1,P2,P3 into the dictionary and their scenario
                         foreach (var featureChild in gherkinDocument.Feature.Children)
                         {
                             if (featureChild is Gherkin.Ast.Scenario scenario)
@@ -173,8 +190,8 @@ namespace WinFormsApp1
                             }
                         }
 
-                       
-
+                       int TotalScenariocount = 0;
+                        //After adding tags and their scenarios, display them in a textbox
                         foreach (var kvp in TagDictionary)
                         {
 
@@ -198,15 +215,16 @@ namespace WinFormsApp1
                             foreach (var scenarioName in scenarioNames)
                             {
                                 DisplayScenario.Text += $"  Scenario: {scenarioName}\r\n";
-
+                                TotalScenariocount++;
                             }
                             DisplayScenario.Text += "\r\n";
                             DisplayScenario.Text += "\r\n";
 
 
                         }
+                        DisplayScenario.Text += $"\r\nTotal Test Found: {TotalScenariocount}";
 
-
+                        //Clear and hide panels that contain any old data
                         AreaTag_panel.Controls.Clear();
                         AreaTag_panel.Visible = false;
                         ScenarioBySearch.Visible = false;
@@ -239,6 +257,8 @@ namespace WinFormsApp1
 
         }
 
+        // Two methods are available either by tags or scenarios
+        // The methods are loaded in a dropdown
         private void loadMethod()
         {
             string[] methodname = { "By Tag Name", "By Scenario" };
@@ -249,9 +269,10 @@ namespace WinFormsApp1
             }
             MethodDropDown.Items.AddRange(methodname);
         }
+
         private void MethodDropDown_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            // Method 1 : Run test by Tags 
             if (MethodDropDown.SelectedIndex == 0)
             {
                 AreaTag_panel.Visible = true;
@@ -299,25 +320,29 @@ namespace WinFormsApp1
                     }
                 }
             }
+
+            // Method 2 : Run test by Scenario
             else if (MethodDropDown.SelectedIndex == 1)
             {
-
+                //Display the scenario pabel and hide the tag panel 
                 AreaTag_panel.Visible = false;
                 Scenario_panel.Visible = true;
                 ScenarioBySearch.Visible = true;
                 scenarioTag = true;
                 DisplayScenario.Visible = true;
 
-                //MessageBox.Show(featureNameSelected);
-
+                //Populate the scenario dropdown with all scenario available 
                 ScenarioByDefault();
             }
 
         }
 
+        //Populate the scenario dropdown with values found in the dictionary
         private void ScenarioByDefault()
         {
             List<String> scenarioList = new List<string>();
+
+            //Retrieve scenarios in the dictionary and put them in a list 
             foreach (var kvp in TagDictionary)
             {
                 string key_tagName = kvp.Key;
@@ -330,7 +355,7 @@ namespace WinFormsApp1
 
             try
             {
-
+                // load the scenarios in a dropdown checkbox list
                 loadScenario(scenarioList);
 
             }
@@ -339,6 +364,29 @@ namespace WinFormsApp1
                 MessageBox.Show("An error occurred: " + ex.Message);
             }
         }
+
+        //For all the tags selected, search its respective scenarios and return in form of a list
+        private List<String> FindKeyValue(string searchkeyvalue)
+        {
+            List<string> scenarios = new List<string>();
+
+            foreach (var kdata in TagDictionary)
+            {
+                if (kdata.Key == searchkeyvalue)
+                {
+                    foreach (var s in kdata.Value)
+                    {
+                        scenarios.Add(s);
+                    }
+                }
+
+            }
+
+            return scenarios;
+        }
+
+        //Search scenarios entered in the scenario search bar and input scenarios found in a list
+      
         private List<String> SearchScenarios()
         {
             List<string> ScenarioFound = new List<string>();
@@ -354,7 +402,6 @@ namespace WinFormsApp1
                     List<String> scenarioNames = kvp.Value;
 
                     string[] searchScenario_split = searchScenario.Split(" ");
-
 
                     foreach (var scenarioName in scenarioNames)
                     {
@@ -374,6 +421,7 @@ namespace WinFormsApp1
             return ScenarioFound;
         }
 
+        //Display 
         private void SearchScenario_Click(object sender, EventArgs e)
         {
 
@@ -391,13 +439,6 @@ namespace WinFormsApp1
             if (displayScenarioFound.Count > 0)
             {
                 var result = MessageBox.Show($"Do you want to run those tests?", "Confirm", MessageBoxButtons.OKCancel);
-                //Button selecttest = new Button();
-                //selecttest.Width = 200;
-                //selecttest.Height = 30;
-
-                //selecttest.Text = "Run Results";
-                //selecttest.Location = new Point(400,100);
-                //ScenarioBySearch.Controls.Add(selecttest);
 
                 if (result == DialogResult.OK)
                 {
@@ -485,6 +526,8 @@ namespace WinFormsApp1
             }
         }
 
+
+        //Click Run for the tags or scenarios selected run 
         private void RunTest_Click(object sender, EventArgs e)
         {
             try
@@ -498,13 +541,16 @@ namespace WinFormsApp1
                 MessageBox.Show("Error in reading" + ex.Message);
             }
         }
-        private void textBox2_TextChanged(object sender, EventArgs e)
+        
+        private void SearchScenario_TextChanged(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(Scenario_textbox.Text))
             {
                 ScenarioByDefault();
             }
         }
+
+        //Format the selected tags or scenarios for it to be run as a command in the command prompt
         public void RunTest(string folderpath)
         {
             //Validation for feature files 
@@ -521,7 +567,7 @@ namespace WinFormsApp1
             }
 
 
-
+            //Validation for scenarios
             if (SelectedScenario == null && ScenarioByCheckBox.Visible)
             {
                 MessageBox.Show("Select a Scenario");
@@ -535,13 +581,13 @@ namespace WinFormsApp1
 
                 string filtervalue;
 
-                // Run by TagName
+                //Method 1:  Run by TagName
                 if (AreaTag_panel.Visible)
                 {
 
                     List<string> checkboxFilters = new List<string>();
 
-                    foreach (CheckBox checkbox in TagCheckboxesList)
+                    foreach (CheckBox checkbox in TagCheckboxesList)//for all the checkboxes dynamically created 
                     {
                         if (checkbox.Checked)
                         {
@@ -557,8 +603,10 @@ namespace WinFormsApp1
                                 foreach (string value in searched_result)
                                 {
                                     string testName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value).Replace(" ", String.Empty);
+
+                                    //Test Command
                                     filtervalue = $"FullyQualifiedName~{featureNameSelected}Feature.{testName}";
-                                    checkboxFilters.Add(filtervalue);
+                                    checkboxFilters.Add(filtervalue);//put the formated selected scenarios under the tags in a list
                                 }
 
                             }
@@ -566,6 +614,7 @@ namespace WinFormsApp1
                         }
                     }
 
+                    //concatenate the values in the array to form a single string of command
                     if (checkboxFilters.Count > 0)
                     {
                         filtertest += $"({string.Join("|", checkboxFilters)})";
@@ -574,29 +623,20 @@ namespace WinFormsApp1
 
 
                 }
-                //Run by Scenario
+                //Method 2: Run by Scenario
                 else if (ScenarioByCheckBox.Visible && ScenarioBySearch.Visible)
                 {
                     List<String> scenariosCommand = new List<String>();
 
-                    //if (string.IsNullOrEmpty(Scenario_textbox.Text))
-                    //{
+                  
                     foreach (string scenario in SelectedScenario)
                     {
+                        //Test Command and put the formatted selected scenarios under the tags in a list
                         string newScenarioFeature = $"{featureNameSelected}Feature.{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(scenario).Replace(" ", String.Empty)}";
                         scenariosCommand.Add(newScenarioFeature);
                     }
 
-                    //}
-                    //else
-                    //{
-                    //    List<string> Searched_scenario = SearchScenarios();
-                    //    foreach (string item in Searched_scenario)
-                    //    {
-                    //        string newScenarioFeature = $"{featureNameSelected}Feature.{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(item).Replace(" ", String.Empty)}";
-                    //        scenariosCommand.Add(newScenarioFeature);
-                    //    }
-                    //}
+                    //concatenate the values in the array to form a single string of command
                     if (scenariosCommand.Count > 0)
                     {
                         filtertest += $"({string.Join("|", scenariosCommand)})";
@@ -606,7 +646,7 @@ namespace WinFormsApp1
 
                 command += folderpath;
 
-
+                //if there have been filters or scenarios selected
                 if (!filtertest.Equals(""))
                 {
                     command += $" --filter \"{filtertest}\"";
@@ -618,7 +658,8 @@ namespace WinFormsApp1
                         TestProcess(command);
                     }
                 }
-                else
+                //otherwise the user can run the entire feature files without any filter or scenarios selected
+                else 
                 {
                     filtertest = $"{featureNameSelected}Feature";
                     command += $" --filter \"{filtertest}\"";
@@ -634,6 +675,8 @@ namespace WinFormsApp1
 
         }
 
+        //After the command is ready, start to process it in the command prompt
+        //and send the output in a folder called LogFileTest and in a file named after the date the test has been run
         private void TestProcess(string command)
         {
             // Actual testing process starts 
@@ -642,16 +685,20 @@ namespace WinFormsApp1
             process.StartInfo.Arguments = command;
             process.StartInfo.RedirectStandardOutput = true;
 
-
-            if (File.Exists(filename_output))
+            if (!Directory.Exists(folder_output))
             {
-                File.AppendAllText(filename_output, $"\n{DateTime.Now}\n");
+                Directory.CreateDirectory(folder_output);
+            }
+            
+            if (File.Exists(filePath))
+            {
+                File.AppendAllText(filePath, $"\n{DateTime.Now}\n");
                 process.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
 
             }
             else
             {
-                File.AppendAllText(filename_output, $"\n{DateTime.Now}\n");
+                File.AppendAllText(filePath, $"\n{DateTime.Now}\n");
                 process.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
             }
 
@@ -671,42 +718,22 @@ namespace WinFormsApp1
                 }
                 else
                 {
-                    MessageBox.Show($"Test ended with error.");
+                    MessageBox.Show($"Test ended with error.{exitCode}");
                 }
             }));
 
         }
-        // Read filename_output from command and input into a file
+        // Read folder_output from command and input into a file
         private static void OutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
         {
             if (!string.IsNullOrEmpty(outLine.Data))
             {
-                File.AppendAllText(filename_output, $"{outLine.Data}\n");
+                File.AppendAllText(filePath, $"{outLine.Data}\n");
 
             }
         }
 
-
-        private List<String> FindKeyValue(string searchkeyvalue)
-        {
-            List<string> scenarios = new List<string>();
-
-            foreach (var kdata in TagDictionary)
-            {
-                if (kdata.Key == searchkeyvalue)
-                {
-                    foreach (var s in kdata.Value)
-                    {
-                        scenarios.Add(s);
-                    }
-                }
-
-            }
-
-            return scenarios;
-        }
-
-        //Searching for scenarios
+      
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
