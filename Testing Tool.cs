@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using TechTalk.SpecFlow;
 
-namespace WinFormsApp1
+namespace TestingTool
 {
     public partial class Form1 : Form
     {

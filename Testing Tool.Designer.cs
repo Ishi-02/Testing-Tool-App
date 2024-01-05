@@ -1,4 +1,4 @@
-﻿namespace WinFormsApp1
+﻿namespace TestingTool
 {
     partial class Form1
     {
